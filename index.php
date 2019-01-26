@@ -88,6 +88,7 @@
             $complete_xml = $XML->saveXML();
 
             $this->writeFile("sitemap.xml", $complete_xml);
+            $this->writeGZip("sitemap.xml.gz", $complete_xml);
 
         }
 
@@ -96,6 +97,12 @@
             $file = fopen($filename, "w");
             fwrite($file, $content);
             fclose($file);
+        }
+
+        private function writeGZip($filename, $content) {
+            $file = gzopen($filename, 'w');
+            gzwrite($file, $content);
+            return gzclose($file);
         }
 
         public function runCRON()
