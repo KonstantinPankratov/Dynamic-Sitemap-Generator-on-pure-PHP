@@ -1,6 +1,23 @@
-# Dynamic Sitemap Generator on pure PHP
+# PHP Sitemap Generator
 
-This script dynamically generates/overwrites a sitemap.xml each hour using cron.
+PHP Sitemap Generator Utility will help you to automatically create/update sitemap.xml or sitemap.xml.gz
 
-## Author
-Konstantin Pankratov
+##Usage
+
+```php
+$sitemap = new SitemapGenerator\Sitemap;
+$sitemap->generate();
+```
+
+######Advanced options
+
+```php
+$options = array(
+    'EnableGZip' => false,
+    'UpdateRobots.txt' => true,
+    'SpecifyWebsiteURL' => 'http://custom-url.com/'
+);
+
+$sitemap = new SitemapGenerator\Sitemap;
+$sitemap->generate();
+```
