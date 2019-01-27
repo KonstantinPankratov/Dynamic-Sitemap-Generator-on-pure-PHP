@@ -1,7 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Konstantin
- * Date: 27.01.2019
- * Time: 13:01
- */
+
+require_once '../src/SitemapGenerator.php';
+
+$sitemap = new SitemapGenerator\Sitemap;
+$sitemap->generate();
