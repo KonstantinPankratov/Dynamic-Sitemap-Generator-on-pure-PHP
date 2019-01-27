@@ -12,13 +12,16 @@ class Sitemap
     protected $dom;
 
     protected $maxURLs = 3000;
-    protected $depth = 0;
-    protected $robots = "robots.txt";
-    protected $EnableGZip = false;
+    protected $depth   = 0;
+    protected $robots  = "robots.txt";
+
+    protected $EnableGZip   = false;
     protected $UpdateRobots = false;
+    protected $RobotsDir    = '/';
+    protected $SitemapDir   = '/';
 
     protected $handledLinks = array();
-    protected $XMLcreated = false;
+    protected $XMLcreated   = false;
 
     function __construct($options = array())
     {
@@ -26,6 +29,8 @@ class Sitemap
         {
             $this->EnableGZip = is_bool($options['EnableGZip']) ? $options['EnableGZip'] : false;
             $this->UpdateRobots = is_bool($options['UpdateRobots.txt']) ? $options['UpdateRobots.txt'] : false;
+            $this->RobotsDir = ($options['RobotsDir'] != '') ? $options['RobotsDir'] : $this->RobotsDir;
+            $this->SitemapDir = ($options['SitemapDir'] != '') ? $options['SitemapDir'] : $this->SitemapDir;
 
             if (filter_var($options['SpecifyWebsiteURL'], FILTER_VALIDATE_URL)) {
                 $this->website = $options['SpecifyWebsiteURL'];
@@ -42,15 +47,15 @@ class Sitemap
 
     public function generate()
     {
-        $this->recursiveSearch($this->website);
-        $this->createXML();
+        try {
+            $this->recursiveSearch($this->website);
+            $this->createXML();
 
-        if ($this->UpdateRobots) {
-            try {
+            if ($this->UpdateRobots)
                 $this->updateRobotsTXT();
-            } catch (\Exception $e) {
-                print($e->getMessage());
-            }
+
+        } catch (\Exception $e) {
+            print($e->getMessage());
         }
     }
 
@@ -93,7 +98,7 @@ class Sitemap
 
             $href = $link->getAttribute('href');
 
-            //if($links[0] == '/' || $links[0] == '?')
+            if($links[0] == '/' || $links[0] == '?')
                 $href = $this->scheme . "://" . $this->domain . '/' .  $href;
 
             if(strlen($href) <= 1)
@@ -165,10 +170,16 @@ class Sitemap
 
         $complete_xml = $XML->saveXML();
 
+        if (!file_exists($this->SitemapDir)) {
+            if (!mkdir($this->SitemapDir, 0777, true)) {
+                throw new \Exception('Cannot create ' . $this->SitemapDir . ' directory.');
+            }
+        }
+
         if ($this->EnableGZip) {
-            $this->writeGZip("/sitemap.xml.gz", $complete_xml);
+            $this->writeGZip($this->SitemapDir . "sitemap.xml.gz", $complete_xml);
         } else {
-            $this->writeFile("/sitemap.xml", $complete_xml);
+            $this->writeFile($this->SitemapDir . "sitemap.xml", $complete_xml);
         }
 
         $this->XMLcreated = true;
@@ -177,14 +188,14 @@ class Sitemap
 
     private function updateRobotsTXT()
     {
-        $original_name = '/'.$this->robots;
-        $duplicate_name = '/test-'.$this->robots;
+        $original_name  = $this->RobotsDir . $this->robots;
+        $duplicate_name = $this->RobotsDir . 'test-'.$this->robots;
 
         if (!file_exists($original_name))
             throw new \Exception('Cannot update ' . $original_name . '. File does not exists.');
 
         $duplicate = fopen($duplicate_name, 'w');
-        $original = fopen($original_name, 'r');
+        $original  = fopen($original_name, 'r');
 
         $once = true;
 
@@ -194,10 +205,12 @@ class Sitemap
             {
                 if (!$once) continue;
 
+                $dir = $this->scheme . '://' . $this->domain . $this->SitemapDir;
+
                 if ($this->EnableGZip) {
-                    fwrite($duplicate, 'Sitemap: ' . $this->buildURL() . 'sitemap.xml.gz');
+                    fwrite($duplicate, 'Sitemap: ' . $dir . 'sitemap.xml.gz');
                 } else {
-                    fwrite($duplicate, 'Sitemap: ' . $this->buildURL() . 'sitemap.xml');
+                    fwrite($duplicate, 'Sitemap: ' . $dir . 'sitemap.xml');
                 }
 
                 fwrite($duplicate, PHP_EOL);
@@ -226,11 +239,6 @@ class Sitemap
         $file = gzopen($filename, 'w');
         gzwrite($file, $content);
         return gzclose($file);
-    }
-
-    private function buildURL()
-    {
-        return $this->scheme . '://' . $this->domain . '/';
     }
 
     public function runCRON()
