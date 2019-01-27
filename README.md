@@ -1,6 +1,10 @@
 # PHP Sitemap Generator
 
-PHP Sitemap Generator Utility will help you to automatically create/update sitemap.xml or sitemap.xml.gz
+#### What does it can?
+
+* Create sitemap.xml or sitemap.xml.gz
+* Update sitemap.xml or sitemap.xml.gz
+* Update robots.txt
 
 ## Usage
 
